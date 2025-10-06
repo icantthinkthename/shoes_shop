@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:shoes_shop/controllers/auth_controller.dart';
 import 'package:shoes_shop/view/signin_screen.dart';
 import 'setting_screen.dart';
+import 'theme_provider.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -13,13 +14,25 @@ class AccountScreen extends StatefulWidget {
 
 class _AccountScreenState extends State<AccountScreen> {
   final AuthController _authController = Get.find<AuthController>();
+  final ThemeProvider _themeProvider = ThemeProvider();
   Map<String, dynamic>? userData;
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _themeProvider.addListener(_onThemeChanged);
     _loadUserData();
+  }
+
+  @override
+  void dispose() {
+    _themeProvider.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    setState(() {});
   }
 
   Future<void> _loadUserData() async {
@@ -45,22 +58,28 @@ class _AccountScreenState extends State<AccountScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = _themeProvider.isDarkMode;
+    final backgroundColor = isDark ? Color(0xFF121212) : Colors.grey[50];
+    final cardColor = isDark ? Color(0xFF1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtitleColor = isDark ? Colors.grey[400] : Colors.grey[600];
+    
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: cardColor,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'My Account',
           style: TextStyle(
-            color: Colors.black,
+            color: textColor,
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings_outlined, color: Colors.black),
+            icon: Icon(Icons.settings_outlined, color: textColor),
             onPressed: () {
               Navigator.push(
                 context,
@@ -73,13 +92,18 @@ class _AccountScreenState extends State<AccountScreen> {
         ],
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: CircularProgressIndicator(
+                color: Colors.deepOrange,
+              ),
+            )
           : SingleChildScrollView(
               child: Column(
                 children: [
                   // Profile Section
                   Container(
-                    color: Colors.white,
+                    width: double.infinity,
+                    color: cardColor,
                     padding: const EdgeInsets.symmetric(vertical: 32),
                     child: Column(
                       children: [
@@ -101,10 +125,10 @@ class _AccountScreenState extends State<AccountScreen> {
                         // Name
                         Text(
                           _getDisplayName(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black,
+                            color: textColor,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -114,7 +138,7 @@ class _AccountScreenState extends State<AccountScreen> {
                           _getEmail(),
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.grey[600],
+                            color: subtitleColor,
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -125,16 +149,19 @@ class _AccountScreenState extends State<AccountScreen> {
                             // Navigate to edit profile
                           },
                           style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: Colors.grey[300]!, width: 1.5),
+                            side: BorderSide(
+                              color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+                              width: 1.5,
+                            ),
                             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(25),
                             ),
                           ),
-                          child: const Text(
+                          child: Text(
                             'Edit Profile',
                             style: TextStyle(
-                              color: Colors.black,
+                              color: textColor,
                               fontWeight: FontWeight.w600,
                               fontSize: 15,
                             ),
@@ -148,42 +175,62 @@ class _AccountScreenState extends State<AccountScreen> {
                   
                   // Menu Items
                   Container(
-                    color: Colors.white,
+                    color: cardColor,
                     child: Column(
                       children: [
                         _buildMenuItem(
                           icon: Icons.shopping_bag_outlined,
                           title: 'My Orders',
                           iconColor: Colors.deepOrange,
+                          textColor: textColor,
+                          isDark: isDark,
                           onTap: () {
                             // Navigate to orders
                           },
                         ),
-                        const Divider(height: 1, indent: 60),
+                        Divider(
+                          height: 1,
+                          indent: 60,
+                          color: isDark ? Colors.grey[800] : Colors.grey[300],
+                        ),
                         _buildMenuItem(
                           icon: Icons.location_on_outlined,
                           title: 'Shipping Address',
                           iconColor: Colors.deepOrange,
+                          textColor: textColor,
+                          isDark: isDark,
                           onTap: () {
                             // Navigate to shipping address
                           },
                         ),
-                        const Divider(height: 1, indent: 60),
+                        Divider(
+                          height: 1,
+                          indent: 60,
+                          color: isDark ? Colors.grey[800] : Colors.grey[300],
+                        ),
                         _buildMenuItem(
                           icon: Icons.help_outline,
                           title: 'Help Center',
                           iconColor: Colors.deepOrange,
+                          textColor: textColor,
+                          isDark: isDark,
                           onTap: () {
                             // Navigate to help center
                           },
                         ),
-                        const Divider(height: 1, indent: 60),
+                        Divider(
+                          height: 1,
+                          indent: 60,
+                          color: isDark ? Colors.grey[800] : Colors.grey[300],
+                        ),
                         _buildMenuItem(
                           icon: Icons.logout,
                           title: 'Logout',
                           iconColor: Colors.deepOrange,
+                          textColor: textColor,
+                          isDark: isDark,
                           onTap: () {
-                            _showLogoutDialog(context);
+                            _showLogoutDialog(context, isDark, cardColor, textColor);
                           },
                         ),
                       ],
@@ -199,6 +246,8 @@ class _AccountScreenState extends State<AccountScreen> {
     required IconData icon,
     required String title,
     required Color iconColor,
+    required Color textColor,
+    required bool isDark,
     required VoidCallback onTap,
   }) {
     return ListTile(
@@ -217,10 +266,10 @@ class _AccountScreenState extends State<AccountScreen> {
       ),
       title: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w500,
-          color: Colors.black87,
+          color: textColor,
         ),
       ),
       trailing: Icon(
@@ -232,12 +281,19 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  void _showLogoutDialog(BuildContext context) {
+  void _showLogoutDialog(BuildContext context, bool isDark, Color cardColor, Color textColor) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
+        backgroundColor: cardColor,
+        title: Text(
+          'Logout',
+          style: TextStyle(color: textColor),
+        ),
+        content: Text(
+          'Are you sure you want to logout?',
+          style: TextStyle(color: textColor),
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),

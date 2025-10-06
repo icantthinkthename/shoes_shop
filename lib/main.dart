@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
     final themeController = Get.find<ThemeController>();
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'E-Commerce App',
+      title: 'Shoes shop',
       theme: AppThemes.light,
       darkTheme: AppThemes.dark,
       themeMode: themeController.theme,

@@ -5,6 +5,7 @@ import 'product_detail_screen.dart';
 import 'all_products_screen.dart';
 import 'cart_screen.dart';
 import 'wishlist_manager.dart';
+import 'theme_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String selectedCategory = 'All';
   int _selectedIndex = 0;
   final WishlistManager _wishlistManager = WishlistManager();
+  final ThemeProvider _themeProvider = ThemeProvider();
   final AuthController _authController = Get.find<AuthController>();
   Map<String, dynamic>? userData;
   bool isLoadingUser = true;
@@ -25,12 +27,14 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _wishlistManager.addListener(_onWishlistChanged);
+    _themeProvider.addListener(_onThemeChanged);
     _loadUserData();
   }
 
   @override
   void dispose() {
     _wishlistManager.removeListener(_onWishlistChanged);
+    _themeProvider.removeListener(_onThemeChanged);
     super.dispose();
   }
 
@@ -42,6 +46,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onWishlistChanged() {
+    setState(() {});
+  }
+
+  void _onThemeChanged() {
     setState(() {});
   }
 
@@ -97,10 +105,31 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void toggleDarkMode() async {
+    await _themeProvider.toggleTheme();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          _themeProvider.isDarkMode 
+              ? 'Dark mode enabled' 
+              : 'Light mode enabled'
+        ),
+        duration: Duration(seconds: 1),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isDark = _themeProvider.isDarkMode;
+    final backgroundColor = isDark ? Color(0xFF121212) : Colors.grey[100];
+    final cardColor = isDark ? Color(0xFF1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final searchBarColor = isDark ? Color(0xFF2C2C2C) : Colors.grey[200];
+    
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: backgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -127,27 +156,28 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Text(
                         isLoadingUser ? 'Hello' : 'Hello ${_getFirstName()}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.grey,
                           fontSize: 14,
                         ),
                       ),
                       Text(
                         _getGreeting(),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
+                          color: textColor,
                         ),
                       ),
                     ],
                   ),
                   const Spacer(),
                   IconButton(
-                    icon: const Icon(Icons.notifications_outlined),
+                    icon: Icon(Icons.notifications_outlined, color: textColor),
                     onPressed: () {},
                   ),
                   IconButton(
-                    icon: const Icon(Icons.shopping_bag_outlined),
+                    icon: Icon(Icons.shopping_bag_outlined, color: textColor),
                     onPressed: () {
                       Navigator.push(
                         context,
@@ -158,8 +188,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                   ),
                   IconButton(
-                    icon: const Icon(Icons.dark_mode_outlined),
-                    onPressed: () {},
+                    icon: Icon(
+                      isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+                      color: textColor,
+                    ),
+                    onPressed: toggleDarkMode,
                   ),
                 ],
               ),
@@ -169,16 +202,18 @@ class _HomeScreenState extends State<HomeScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: TextField(
+                style: TextStyle(color: textColor),
                 decoration: InputDecoration(
                   hintText: 'Search',
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: const Icon(Icons.tune),
+                  hintStyle: TextStyle(color: Colors.grey),
+                  prefixIcon: Icon(Icons.search, color: textColor),
+                  suffixIcon: Icon(Icons.tune, color: textColor),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  fillColor: Colors.grey[200],
+                  fillColor: searchBarColor,
                 ),
               ),
             ),
@@ -190,13 +225,13 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  Expanded(child: _buildCategoryChip('All')),
+                  Expanded(child: _buildCategoryChip('All', isDark, cardColor, textColor)),
                   const SizedBox(width: 8),
-                  Expanded(child: _buildCategoryChip('Men')),
+                  Expanded(child: _buildCategoryChip('Men', isDark, cardColor, textColor)),
                   const SizedBox(width: 8),
-                  Expanded(child: _buildCategoryChip('Women')),
+                  Expanded(child: _buildCategoryChip('Women', isDark, cardColor, textColor)),
                   const SizedBox(width: 8),
-                  Expanded(child: _buildCategoryChip('Girls')),
+                  Expanded(child: _buildCategoryChip('Girls', isDark, cardColor, textColor)),
                 ],
               ),
             ),
@@ -269,11 +304,12 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Popular Product',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
+                      color: textColor,
                     ),
                   ),
                   TextButton(
@@ -295,55 +331,66 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             
             // Product grid
-        // Product grid
-Expanded(
-  child: Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16),
-    child: GridView.count(
-      crossAxisCount: 2,
-      mainAxisSpacing: 16,
-      crossAxisSpacing: 16,
-      childAspectRatio: 0.75,
-      children: [
-        _buildProductCard(
-          'Nike Air Max 270',
-          'Footwear',
-          159.99,
-          189.99,
-          'assets/images/shoe.jpg',
-        ),
-        _buildProductCard(
-          'Adidas Ultraboost 22',
-          'Footwear',
-          189.99,
-          220.00,
-          'assets/images/shoe2.jpg',
-        ),
-        _buildProductCard(
-          'Puma RS-X³',
-          'Footwear',
-          129.99,
-          0.0,
-          'assets/images/shoes2.jpg',
-        ),
-        _buildProductCard(
-          'New Balance 574',
-          'Footwear',
-          84.99,
-          110.00,
-          'assets/images/nb574.png',
-        ),
-      ],
-    ),
-  ),
-),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: GridView.count(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 0.75,
+                  children: [
+                    _buildProductCard(
+                      'Nike Air Max 270',
+                      'Footwear',
+                      159.99,
+                      189.99,
+                      'assets/images/shoe.jpg',
+                      isDark,
+                      cardColor,
+                      textColor,
+                    ),
+                    _buildProductCard(
+                      'Adidas Ultraboost 22',
+                      'Footwear',
+                      189.99,
+                      220.00,
+                      'assets/images/shoe2.jpg',
+                      isDark,
+                      cardColor,
+                      textColor,
+                    ),
+                    _buildProductCard(
+                      'Puma RS-X³',
+                      'Footwear',
+                      129.99,
+                      0.0,
+                      'assets/images/shoes2.jpg',
+                      isDark,
+                      cardColor,
+                      textColor,
+                    ),
+                    _buildProductCard(
+                      'New Balance 574',
+                      'Footwear',
+                      84.99,
+                      110.00,
+                      'assets/images/nb574.jpg',
+                      isDark,
+                      cardColor,
+                      textColor,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCategoryChip(String category) {
+  Widget _buildCategoryChip(String category, bool isDark, Color cardColor, Color textColor) {
     bool isSelected = selectedCategory == category;
     return GestureDetector(
       onTap: () {
@@ -354,10 +401,10 @@ Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.deepOrange : Colors.white,
+          color: isSelected ? Colors.deepOrange : cardColor,
           borderRadius: BorderRadius.circular(25),
           border: Border.all(
-            color: isSelected ? Colors.deepOrange : Colors.grey[300]!,
+            color: isSelected ? Colors.deepOrange : (isDark ? Colors.grey[700]! : Colors.grey[300]!),
           ),
         ),
         child: Row(
@@ -369,7 +416,7 @@ Expanded(
             Text(
               category,
               style: TextStyle(
-                color: isSelected ? Colors.white : Colors.black,
+                color: isSelected ? Colors.white : textColor,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
             ),
@@ -390,6 +437,9 @@ Expanded(
     double price,
     double oldPrice,
     String imagePath,
+    bool isDark,
+    Color cardColor,
+    Color textColor,
   ) {
     int discountPercent = calculateDiscount(price, oldPrice);
     bool isFavorite = _wishlistManager.isInWishlist(title);
@@ -411,11 +461,13 @@ Expanded(
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardColor,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: isDark 
+                  ? Colors.black.withOpacity(0.3)
+                  : Colors.grey.withOpacity(0.1),
               spreadRadius: 1,
               blurRadius: 5,
             ),
@@ -462,8 +514,8 @@ Expanded(
                     onTap: () => toggleFavorite(title, category, price, oldPrice, imagePath),
                     child: Container(
                       padding: const EdgeInsets.all(6),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
+                      decoration: BoxDecoration(
+                        color: isDark ? Color(0xFF2C2C2C) : Colors.white,
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -483,9 +535,10 @@ Expanded(
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
+                      color: textColor,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -501,9 +554,10 @@ Expanded(
                     children: [
                       Text(
                         '\$${price.toStringAsFixed(2)}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
+                          color: textColor,
                         ),
                       ),
                       const SizedBox(width: 8),

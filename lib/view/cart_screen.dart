@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'cart_manager.dart';
+import 'checkout_screen.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -51,51 +52,11 @@ class _CartScreenState extends State<CartScreen> {
       return;
     }
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Checkout'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Total Items: ${_cartManager.totalItems}'),
-            SizedBox(height: 8),
-            Text(
-              'Total Amount: \$${_cartManager.totalPrice.toStringAsFixed(2)}',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: Colors.deepOrange,
-              ),
-            ),
-            SizedBox(height: 16),
-            Text('Proceed with payment?'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Order placed successfully!'),
-                  backgroundColor: Colors.green,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-              _cartManager.clearCart();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.deepOrange,
-            ),
-            child: Text('Confirm', style: TextStyle(color: Colors.white)),
-          ),
-        ],
+    // Navigate to checkout screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CheckoutScreen(),
       ),
     );
   }

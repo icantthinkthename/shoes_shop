@@ -41,7 +41,7 @@ class _AllProductsScreenState extends State<AllProductsScreen> {
     'category': 'Footwear',
     'price': 84.99,
     'oldPrice': 110.00,
-    'image': 'assets/images/nb574.png',
+    'image': 'assets/images/nb574.jpg',
     'gender': 'All',
   },
   {
